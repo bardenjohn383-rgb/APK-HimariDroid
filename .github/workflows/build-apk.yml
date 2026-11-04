@@ -1,0 +1,45 @@
+
+name: Build HimariDroid APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'HimariDroid-zh-CN.zip'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Extract project
+        run: |
+          unzip -q HimariDroid-zh-CN.zip -d source
+          cd source/HimariDroid-master
+          chmod +x gradlew
+
+      - name: Install Android SDK
+        run: sdkmanager "platforms;android-37"
+
+      - name: Build APK
+        working-directory: source/HimariDroid-master
+        run: ./gradlew :app:assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: HimariDroid-Chinese-APK
+          path: source/HimariDroid-master/app/build/outputs/apk/debug/*.apk
